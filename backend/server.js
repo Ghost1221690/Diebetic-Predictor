@@ -114,12 +114,13 @@ app.post("/contact", async (req, res) => {
 // 🔹 Health Check
 // =============================
 app.get("/", (req, res) => {
-  res.json({ status: "OK", message: "AI App Server is alive" });});
+  res.json({ status: "OK", message: "AI App Server is alive" });
 
   app.post("/predict", async (req, res) => {
   console.log("Received /predict request", req.body);
   ...
 });
+  });
 
 
 
