@@ -1,0 +1,15 @@
+name: diabetes_model
+type: function
+runtime:
+  name: python
+  version: 3.11
+main: wml_function.py
+inputs:
+  - name: input_data
+    type: array      # Expecting a 2D array or list of lists
+  - name: columns
+    type: array      # Feature column names
+outputs:
+  - name: predictions
+    type: array      # Model predictions as a list
+
