@@ -11,7 +11,8 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "node-fetch": "^3.3.2",
-    "@sendgrid/mail": "^7.8.0"
+    "@sendgrid/mail": "^8.9.0"
+
   }
 }
 
