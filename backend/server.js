@@ -16,7 +16,7 @@ const app = express();
 const allowedOrigins = [
   "http://127.0.0.1:5500", // local dev
   "http://localhost:5500",
-  "https://ghost1221690.github.io/Diebetic-Predictor/", // 🔹 replace with your actual frontend URL
+  "https://ghost1221690.github.io/Diebetic-Predictor", // 🔹 replace with your actual frontend URL
   "https://your-frontend-site.firebaseapp.com"
 ];
 
