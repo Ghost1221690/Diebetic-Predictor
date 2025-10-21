@@ -13,32 +13,40 @@ const app = express();
 // ===================================================
 // ✅ CORS Configuration (Fixes “blocked by CORS policy”)
 // ===================================================
+// ===================================================
+// ✅ Robust CORS Configuration
+// ===================================================
 const allowedOrigins = [
-  "http://127.0.0.1:5500", // local dev
+  "http://127.0.0.1:5500", // Local dev
   "http://localhost:5500",
-  "https://ghost1221690.github.io/Diebetic-Predictor", // 🔹 replace with your actual frontend URL
-  "https://your-frontend-site.firebaseapp.com"
+  "https://ghost1221690.github.io/Diebetic-Predictor", // GitHub Pages frontend
+  "https://your-frontend-site.firebaseapp.com" // Firebase frontend
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // allow mobile/curl
+      // Allow requests with no origin (mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+
+      // Allow only whitelisted origins
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       } else {
+        console.warn("Blocked by CORS:", origin);
         return callback(new Error("Not allowed by CORS"));
       }
     },
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+    credentials: true
   })
 );
 
-// Handle preflight requests
+// ===================================================
+// ✅ Handle preflight OPTIONS requests
+// ===================================================
 app.options("*", cors());
-
 // ===================================================
 // Middleware
 // ===================================================
