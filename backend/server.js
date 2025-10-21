@@ -17,23 +17,20 @@ const app = express();
 // ✅ Robust CORS Configuration
 // ===================================================
 const allowedOrigins = [
-  "http://127.0.0.1:5500", // Local dev
+  "http://127.0.0.1:5500",
   "http://localhost:5500",
-  "https://ghost1221690.github.io/Diebetic-Predictor", // GitHub Pages frontend
-  "https://your-frontend-site.firebaseapp.com" // Firebase frontend
+  "https://ghost1221690.github.io", // ✅ fixed
+  "https://your-frontend-site.firebaseapp.com"
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (mobile apps, curl, Postman)
       if (!origin) return callback(null, true);
-
-      // Allow only whitelisted origins
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       } else {
-        console.warn("Blocked by CORS:", origin);
+        console.warn("🚫 Blocked by CORS:", origin);
         return callback(new Error("Not allowed by CORS"));
       }
     },
@@ -42,6 +39,7 @@ app.use(
     credentials: true
   })
 );
+
 
 // ===================================================
 // ✅ Handle preflight OPTIONS requests
