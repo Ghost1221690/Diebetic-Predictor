@@ -1,4 +1,6 @@
-/* Reset default margins and paddings */
+/* =========================
+   Reset & Base Styles
+========================= */
 * {
   margin: 0;
   padding: 0;
@@ -8,16 +10,15 @@
 html {
   scroll-behavior: smooth;
 }
-
-
-/* Body */
 body {
   background-color: #f2f5f8;
   color: #333;
   line-height: 1.6;
 }
 
-/* Header */
+/* =========================
+   Header
+========================= */
 header {
   display: flex;
   justify-content: space-between;
@@ -29,7 +30,8 @@ header {
 }
 
 header .brand img {
-  height: 50px;
+  max-height: 50px;
+  width: auto;
 }
 
 header nav a {
@@ -38,30 +40,34 @@ header nav a {
   margin-left: 15px;
   font-weight: bold;
 }
-
 header nav a:hover {
   text-decoration: underline;
 }
 
+/* =========================
+   Sections
+========================= */
 section {
-  padding-top: 80px; /* adjust based on header height */
-  margin-top: -80px; /* negative margin to offset scroll */
+  padding-top: 80px; /* for fixed header */
+  margin-top: -80px; 
 }
 
-
-
-/* Container */
+/* =========================
+   Containers & Cards
+========================= */
 .container {
   max-width: 600px;
   margin: 30px auto;
   padding: 20px;
   background-color: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* Form Elements */
-form input, form select, form button {
+/* =========================
+   Form Elements
+========================= */
+form input, form select, form button, form textarea {
   width: 100%;
   padding: 12px;
   margin: 10px 0;
@@ -78,12 +84,13 @@ form button {
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
-
 form button:hover {
   background-color: #084298;
 }
 
-/* Output Section */
+/* =========================
+   Output & Report
+========================= */
 pre#output {
   margin-top: 15px;
   padding: 15px;
@@ -92,7 +99,6 @@ pre#output {
   overflow-x: auto;
 }
 
-/* Report Section */
 .report {
   margin-top: 20px;
   padding: 20px;
@@ -110,11 +116,13 @@ pre#output {
   cursor: pointer;
   margin-top: 10px;
 }
-
 .report button:hover {
   background-color: #084298;
 }
 
+/* =========================
+   About Section
+========================= */
 .about-section {
   background-color: #e9f2ff;
   padding: 40px 20px;
@@ -122,37 +130,28 @@ pre#output {
   margin: 40px auto;
   max-width: 800px;
 }
-
 .about-section h2 {
   margin-bottom: 20px;
   color: #0d6efd;
   text-align: center;
 }
-
 .about-section p {
   margin-bottom: 15px;
   font-size: 1rem;
   line-height: 1.6;
   text-align: justify;
 }
-
 .about-section ul {
   list-style: disc inside;
   margin-top: 10px;
 }
-
 .about-section ul li {
   margin-bottom: 8px;
 }
 
-.contact-section {
-  background-color: #f9f9f9;
-  padding: 40px 20px;
-  border-radius: 12px;
-  margin: 40px auto;
-  max-width: 700px;
-}
-
+/* =========================
+   Contact Section
+========================= */
 .contact-section {
   background-color: #f9f9f9;
   padding: 40px 20px;
@@ -161,40 +160,43 @@ pre#output {
   max-width: 700px;
   text-align: center;
 }
-
 .contact-section h2 {
   color: #0d6efd;
   margin-bottom: 15px;
 }
-
 .contact-section p {
   margin-bottom: 25px;
   font-size: 1rem;
 }
-.contact-section form textarea, .contact-section form button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; }
+.contact-section form textarea, .contact-section form button {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
 
-/* Social icons container */
+/* =========================
+   Social Icons
+========================= */
 .social-links {
   display: flex;
   justify-content: center;
   gap: 25px;
 }
-
-/* Social icons */
 .social-links a img {
   width: 40px;
   height: 40px;
   transition: transform 0.3s ease;
 }
-
-/* Hover effect on icons */
 .social-links a img:hover {
   transform: scale(1.2);
 }
 
-
-
-/* Footer */
+/* =========================
+   Footer
+========================= */
 footer {
   text-align: center;
   padding: 15px 20px;
@@ -203,31 +205,44 @@ footer {
   margin-top: 30px;
 }
 
-/* Responsive */
+/* =========================
+   Responsive Styles
+========================= */
+@media (max-width: 1024px) {
+  .container, .about-section, .contact-section {
+    margin: 20px auto;
+    padding: 25px 15px;
+  }
+}
+
 @media (max-width: 768px) {
   header {
     flex-direction: column;
     align-items: flex-start;
   }
-
   header nav {
     margin-top: 10px;
-  }
-
-  .container {
-    margin: 20px;
-    padding: 15px;
   }
 }
 
 @media (max-width: 480px) {
-  form input, form select, form button {
+  form input, form select, form button, form textarea {
     font-size: 0.9rem;
     padding: 10px;
   }
-
   header .brand img {
-    height: 40px;
+    max-height: 40px;
+  }
+  .report button {
+    width: 100%;
+  }
+  section {
+    padding-top: 60px;
+    margin-top: -60px;
+  }
+  .about-section, .contact-section {
+    padding: 20px 15px;
   }
 }
+
 
