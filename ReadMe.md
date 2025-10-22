@@ -29,6 +29,8 @@ A production-ready, Flask-based REST API for predicting the risk of diabetes usi
 
 ## 1. Overview
 
+Live Demo: https://ghost1221690.github.io/Diebetic-Predictor/
+
 This API provides a lightweight and scalable ML inference service to determine diabetes risk from commonly collected medical parameters. The model is pre-trained and exported for real-time inference. This API is designed for integration with mobile apps, dashboards, IoT health devices, and cloud-based medical applications.
 
 ---
@@ -218,3 +220,4 @@ Pull requests and feature suggestions are welcome.
 MIT License
 
 ---
+
