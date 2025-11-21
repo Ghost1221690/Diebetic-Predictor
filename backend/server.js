@@ -251,7 +251,7 @@ if (process.env.IBM_DEPLOYMENT_URL && process.env.IBM_API_KEY) {
 // ===================================================
 // 🔄 CRON JOB — PING RENDER URL TO PREVENT SLEEP
 // ===================================================
-const SELF_URL = process.env.RENDER_INTERNAL_URL || "https://diebetic-predictor-1.onrender.com";
+const SELF_URL = process.env.RENDER_INTERNAL_URL ||;
 
 setInterval(async () => {
   try {
