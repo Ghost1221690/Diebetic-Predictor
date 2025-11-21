@@ -1,4 +1,3 @@
-// server.js
 import express from "express";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
@@ -11,15 +10,12 @@ dotenv.config();
 const app = express();
 
 // ===================================================
-// ✅ CORS Configuration (Fixes “blocked by CORS policy”)
-// ===================================================
-// ===================================================
-// ✅ Robust CORS Configuration
+// ✅ CORS Configuration
 // ===================================================
 const allowedOrigins = [
   "http://127.0.0.1:5500",
   "http://localhost:5500",
-  "https://ghost1221690.github.io", // ✅ fixed
+  "https://ghost1221690.github.io",
   "https://your-frontend-site.firebaseapp.com"
 ];
 
@@ -40,51 +36,41 @@ app.use(
   })
 );
 
-
-// ===================================================
-// ✅ Handle preflight OPTIONS requests
-// ===================================================
 app.options("*", cors());
+
 // ===================================================
 // Middleware
 // ===================================================
 app.use(express.json());
 app.use(express.static("public"));
 
-// -------------------------
-// Setup SendGrid
-// -------------------------
+// ===================================================
+// SendGrid Setup
+// ===================================================
 if (!process.env.SENDGRID_API_KEY) {
-  console.warn("⚠️ SENDGRID_API_KEY not set in .env — contact form won't work.");
+  console.warn("⚠️ SENDGRID_API_KEY not set");
 } else {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 }
 
-// -------------------------
-// Debug prints for env
-// -------------------------
-console.log("🔐 IBM_API_KEY present:", !!process.env.IBM_API_KEY);
-console.log("🔗 IBM_DEPLOYMENT_URL present:", !!process.env.IBM_DEPLOYMENT_URL);
-console.log("✉️ SENDGRID configured:", !!process.env.SENDGRID_API_KEY);
-
 // ===================================================
-// 🔐 Fetch IBM IAM Token (reusable)
+// 🔐 IBM IAM Token Fetcher
 // ===================================================
 async function getAccessToken() {
   if (!process.env.IBM_API_KEY) {
-    throw new Error("IBM_API_KEY is not set in environment");
+    throw new Error("IBM_API_KEY is missing");
   }
 
   const response = await fetch("https://iam.cloud.ibm.com/identity/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=${process.env.IBM_API_KEY}`,
+    body: `grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=${process.env.IBM_API_KEY}`
   });
 
   const data = await response.json();
   if (!data.access_token) {
     console.error("❌ Failed to fetch IAM token:", data);
-    throw new Error("Could not obtain access token");
+    throw new Error("Failed to get IBM IAM Token");
   }
 
   return data.access_token;
@@ -98,8 +84,8 @@ app.post("/predict", async (req, res) => {
     const inputData = req.body?.input_data?.[0];
     if (!inputData || !inputData.fields || !inputData.values) {
       return res.status(400).json({
-        error: "Invalid input format",
-        message: "⚠️ Missing input_data structure.",
+        error: "Invalid input",
+        message: "Missing fields or values",
       });
     }
 
@@ -107,146 +93,124 @@ app.post("/predict", async (req, res) => {
     const values = inputData.values[0];
 
     // Validate numeric values
-    const hasInvalid = values.some(
-      (v) =>
-        v === "" ||
-        v === null ||
-        v === undefined ||
-        typeof v !== "number" ||
-        isNaN(v)
+    const invalid = values.some(
+      (v) => v === "" || v === null || v === undefined || typeof v !== "number" || isNaN(v)
     );
-    if (hasInvalid) {
-      console.error("❌ Invalid input values:", values);
+    if (invalid) {
       return res.status(400).json({
-        error: "Invalid input: Missing or NaN values detected.",
-        message: "⚠️ Please fill all fields correctly before submitting.",
+        error: "Invalid input values",
+        message: "Please enter valid numbers.",
       });
     }
 
     if (!process.env.IBM_DEPLOYMENT_URL) {
       return res.status(500).json({
         error: "Server misconfigured",
-        details: "IBM_DEPLOYMENT_URL not set in environment",
+        details: "IBM_DEPLOYMENT_URL missing"
       });
     }
 
     const token = await getAccessToken();
 
-    // Timeout + abort controller
+    // Timeout controller
     const controller = new AbortController();
-    const TIMEOUT_MS = 90000; // 90 seconds for cold start safety
-    const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timeout = setTimeout(() => controller.abort(), 90000);
 
     const payload = {
-      input_data: [
-        {
-          fields,
-          values: [values],
-        },
-      ],
+      input_data: [{ fields, values: [values] }]
     };
 
-    const ibmResponse = await fetch(process.env.IBM_DEPLOYMENT_URL, {
+    const response = await fetch(process.env.IBM_DEPLOYMENT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token}`
       },
       body: JSON.stringify(payload),
-      signal: controller.signal,
+      signal: controller.signal
     });
 
     clearTimeout(timeout);
 
-    if (!ibmResponse.ok) {
-      const text = await ibmResponse.text();
-      console.error("❌ IBM model API error:", ibmResponse.status, text);
-      return res.status(ibmResponse.status).json({
-        error: "Model API call failed",
-        details: text,
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).json({
+        error: "Model API Error",
+        details: errorText
       });
     }
 
-    const result = await ibmResponse.json();
-    console.log("✅ Received prediction from IBM:", result);
+    const result = await response.json();
     res.json(result);
+
   } catch (err) {
-    console.error("❌ Prediction Error:", err.message || err);
     if (err.name === "AbortError") {
       return res.status(504).json({
-        error: "Model API call failed",
-        details: "Request to model timed out.",
+        error: "Model timeout",
+        details: "IBM model took too long"
       });
     }
+
     res.status(500).json({
-      error: "Model API call failed",
-      details: err.message || String(err),
+      error: "Prediction failed",
+      details: err.message
     });
   }
 });
 
 // ===================================================
-// ✉️ Contact Form Endpoint (SendGrid)
+// ✉️ Contact Form (SendGrid Email)
 // ===================================================
 app.post("/contact", async (req, res) => {
   try {
     if (!process.env.SENDGRID_API_KEY) {
-      return res
-        .status(500)
-        .json({ success: false, error: "SendGrid not configured on server." });
+      return res.status(500).json({ success: false, error: "SendGrid not configured" });
     }
 
-    const { name, email, message, subject, phone } = req.body || {};
+    const { name, email, phone, message } = req.body;
 
     if (!name || !email || !message) {
       return res.status(400).json({
         success: false,
-        error: "Missing required fields (name, email, message).",
+        error: "Missing required fields"
       });
     }
 
-    // Build email
-    const mailSubject = "Diabetes Predictor Contact";
-    const senderName = "Om Kawale";
-    const fromEmail = process.env.SENDER_EMAIL || "no-reply@example.com";
+    const senderName = "Diebetic Ai";
+    const fromEmail = process.env.SENDER_EMAIL;
     const toEmail = process.env.RECEIVER_EMAIL || fromEmail;
 
     const emailBody = `
-      You have a new message from the Diabetes Predictor contact form.
+New Contact Form Message:
 
-      Name: ${name}
-      Email: ${email}
-      Phone: ${phone ?? "N/A"}
-      Message:
-      ${message}
+Name: ${name}
+Email: ${email}
+Phone: ${phone ?? "N/A"}
 
-      -------------------------
-      (This message was submitted via your web app)
+Message:
+${message}
     `;
 
-    const msg = {
+    await sgMail.send({
       to: toEmail,
       from: `${senderName} <${fromEmail}>`,
-      subject: mailSubject,
-      text: emailBody,
-      html: `<pre style="font-family:inherit;white-space:pre-wrap;">${emailBody}</pre>`,
-    };
+      subject: "Diabetes Predictor Contact",
+      text: emailBody
+    });
 
-    await sgMail.send(msg);
-    return res.json({ success: true, message: "Email sent" });
+    res.json({ success: true, message: "Email sent" });
+
   } catch (err) {
-    console.error("❌ Contact form send failed:", err);
-    let details = err.message;
-    if (err.response && err.response.body)
-      details = JSON.stringify(err.response.body);
-    return res
-      .status(500)
-      .json({ success: false, error: "Failed to send email", details });
+    res.status(500).json({
+      success: false,
+      error: "Failed to send email",
+      details: err.message
+    });
   }
 });
 
 // ===================================================
-// 🔁 Warm-up Model (keep IBM model awake)
+// 🔥 Warm-up IBM Model Every 4 Minutes
 // ===================================================
 if (process.env.IBM_DEPLOYMENT_URL && process.env.IBM_API_KEY) {
   setInterval(async () => {
@@ -259,62 +223,60 @@ if (process.env.IBM_DEPLOYMENT_URL && process.env.IBM_API_KEY) {
           input_data: [
             {
               fields: [
-                "age",
-                "hypertension",
-                "heart_disease",
-                "bmi",
-                "HbA1c_level",
-                "blood_glucose_level",
-                "age_bmi",
-                "hba1c_glucose",
-                "ht_hd",
-                "bmi_squared",
-                "glucose_squared",
-                "gender_Male",
-                "gender_Other",
-                "smoking_history_former",
-                "smoking_history_never",
-                "smoking_history_unknown",
+                "age", "hypertension", "heart_disease", "bmi", "HbA1c_level",
+                "blood_glucose_level", "age_bmi", "hba1c_glucose", "ht_hd",
+                "bmi_squared", "glucose_squared", "gender_Male", "gender_Other",
+                "smoking_history_former", "smoking_history_never", "smoking_history_unknown"
               ],
-              values: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
-            },
-          ],
+              values: [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+            }
+          ]
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          timeout: 25000,
+            "Content-Type": "application/json"
+          }
         }
       );
 
-      console.log("🔥 Warm-up ping sent to IBM model");
+      console.log("🔥 Warm-up ping sent");
+
     } catch (err) {
-      console.log(
-        "⚠️ Warm-up ping failed (this is OK occasionally):",
-        err.message || err.toString()
-      );
+      console.log("⚠️ Warm-up failed:", err.message);
     }
   }, 4 * 60 * 1000); // every 4 minutes
-} else {
-  console.warn("⚠️ Warm-up disabled: IBM_DEPLOYMENT_URL or IBM_API_KEY missing.");
 }
 
 // ===================================================
-// 🩵 Health Check Route
+// 🔄 CRON JOB — PING RENDER URL TO PREVENT SLEEP
+// ===================================================
+const SELF_URL = process.env.RENDER_INTERNAL_URL || "https://diebetic-predictor-1.onrender.com";
+
+setInterval(async () => {
+  try {
+    await fetch(SELF_URL);
+    console.log("⏳ Self-ping OK:", SELF_URL);
+  } catch (err) {
+    console.log("⚠️ Self-ping failed:", err.message);
+  }
+}, 10 * 60 * 1000); // every 10 minutes
+
+// ===================================================
+// Health Check
 // ===================================================
 app.get("/", (req, res) => {
-  res.json({ status: "Backend is alive 🚀", time: new Date().toISOString() });
+  res.json({ status: "Backend Alive 🚀", time: new Date().toISOString() });
 });
 
 // ===================================================
-// 🚀 Start server
+// Start Server
 // ===================================================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
+
 
 
 
